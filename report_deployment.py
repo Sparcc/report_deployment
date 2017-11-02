@@ -23,7 +23,7 @@ url2 = 'https://build.ccamatil.com/browse/OPD-OP11'
 usr = 'thomas.rea@rxpservices.com'
 usr2 = 'aureath'
 
-lastBranchDeployed = "None"
+lastBranchDeployed = "buildResult_OPD-OP11-41"
 
 designatedRoom = room['TEST']
 driver = webdriver.Chrome(driverPaths['Chrome'])
@@ -71,33 +71,43 @@ def reportToHipchat(driver):
 	enterMessage(driver, xpath, message)
 	
 #Main Operation
-passwd2 = getpass.getpass('Jira password:')
+#passwd2 = getpass.getpass('Jira password:')
+f = open('password.txt','r') #read
+passwd2 = f.read()
 passwd = getpass.getpass('Hipchat password:')
 
 branchFound = False
 waitForDeployment = True #no way to end for now
 while waitForDeployment:
 	driver.get(url2) #list of branches
+	'''
+	INSERT LOGIN CODE
+	'''
+	xpath = '//*[@id="loginForm_os_username"]' #username field
+	
+	xpath = '//*[@id="loginForm_os_password"]' #password field
+	
 	xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]' #first branch in list
-	element = driver.find_element_by_xpath(xpath) #assumes there is atleast one branch in list
-	while !branchFound:
-		if element.text != lastBranchDeployed:
+	element = driver.find_element_by_xpath(xpath) #assumes there is at least one branch in list
+	while not branchFound:
+		if element.get_attribute('id') != lastBranchDeployed:
+			lastBranchDeployed = element.get_attribute('id')
 			element.click() # go to branch details
 			branchFound = True
 		else:
-			sleep(5)
+			sleep(10)
 		
 	found = False
-	while !found:
+	while not found:
 		try: #find branch success/not successful tag
-		element = WebDriverWait(driver, 10).until(
-			EC.presence_of_element_located((By.XPATH, '//*[@id="content"]/div[2]/div/section[2]/div/div/div/div[1]/div[2]/div/div[2]/table/tbody/tr/td[2]/span'))
+			element = WebDriverWait(driver, 10).until(
+				EC.presence_of_element_located((By.XPATH, '//*[@id="content"]/div[2]/div/section[2]/div/div/div/div[1]/div[2]/div/div[2]/table/tbody/tr/td[2]/span'))
 		)
+		except:
+			print('Cannot find success tag to even determine success or not')
+			driver.quit()
 		#see if tag says yes or not
 		if element.text == 'SUCCESS':
 			found = True
-		finally:
-			print('Cannot find success tag to even determine success or not')
-			driver.quit()
 	#after success found then a message is posted to hipchat
 	reportToHipchat(driver)
