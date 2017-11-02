@@ -27,7 +27,7 @@ lastBranchDeployed = "buildResult_OPD-OP11-41"
 
 designatedRoom = room['TEST']
 
-message = 'Deployment has been made on: '
+message = 'JUST A TEST - Deployment has been made on: '
 
 def enterMessage(driver, xpath, message):
 		element = driver.find_element_by_xpath(xpath)
@@ -91,14 +91,18 @@ while waitForDeployment:
 	driver.find_element_by_xpath(xpath).click()
 	
 	branchFound = False
-	xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]' #first branch in list
 	while not branchFound:
+		xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]/a'#first branch in list element containing id
 		element = driver.find_element_by_xpath(xpath) #assumes there is at least one branch in list
+		print('branch at top of list: ' + element.get_attribute('id'))
 		if element.get_attribute('id') != lastBranchDeployed:
 			lastBranchDeployed = element.get_attribute('id')
-			element.click() # go to branch details
+			xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]'#element above to be clicked
+			driver.find_element_by_xpath(xpath).click() # go to branch details
 			branchFound = True
+			print('found new branch: ' + lastBranchDeployed)
 		else:
+			print('no new branch...')
 			sleep(10)
 		
 	found = False
