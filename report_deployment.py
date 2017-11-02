@@ -25,15 +25,29 @@ usr2 = 'aureath'
 
 lastBranchDeployed = "buildResult_OPD-OP11-41"
 
-designatedRoom = room['TEST']
+designatedRoom = room['QA']
 
 message = 'JUST A TEST - Deployment has been made on: '
 
+loggedIn = False
+
+def login (driver):
+	xpath = '//*[@id="loginForm_os_username"]' #username field
+	element = driver.find_element_by_xpath(xpath)
+	element.send_keys(usr2)
+	
+	xpath = '//*[@id="loginForm_os_password"]' #password field
+	element = driver.find_element_by_xpath(xpath)
+	element.send_keys(passwd)
+	
+	xpath = '//*[@id="loginForm_save"]'
+	driver.find_element_by_xpath(xpath).click()
+
 def enterMessage(driver, xpath, message):
-		element = driver.find_element_by_xpath(xpath)
-		element.send_keys(message)
-		time.sleep(0.1)
-		element.send_keys(Keys.RETURN)
+	element = driver.find_element_by_xpath(xpath)
+	element.send_keys(message)
+	time.sleep(0.2)
+	element.send_keys(Keys.RETURN)
 
 def reportToHipchat(driver, message):
 	
@@ -76,34 +90,31 @@ passwd = getpass.getpass('Hipchat password:')
 driver = webdriver.Chrome(driverPaths['Chrome'])
 
 waitForDeployment = True #no way to end for now
+
+
 while waitForDeployment:
+
 	driver.get(url2) #list of branches
 
-	xpath = '//*[@id="loginForm_os_username"]' #username field
-	element = driver.find_element_by_xpath(xpath)
-	element.send_keys(usr2)
-	
-	xpath = '//*[@id="loginForm_os_password"]' #password field
-	element = driver.find_element_by_xpath(xpath)
-	element.send_keys(passwd)
-	
-	xpath = '//*[@id="loginForm_save"]'
-	driver.find_element_by_xpath(xpath).click()
+	if not loggedIn:
+		login(driver)
+		loggedIn = True
 	
 	branchFound = False
 	while not branchFound:
-		xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]/a'#first branch in list element containing id
+		xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]/a'#first branch in list - element containing id
 		element = driver.find_element_by_xpath(xpath) #assumes there is at least one branch in list
-		print('branch at top of list: ' + element.get_attribute('id'))
-		if element.get_attribute('id') != lastBranchDeployed:
-			lastBranchDeployed = element.get_attribute('id')
+		id = element.get_attribute('id')
+		print('branch at top of list: ' + id)
+		if id != lastBranchDeployed:
+			lastBranchDeployed = id
 			xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]'#element above to be clicked
 			driver.find_element_by_xpath(xpath).click() # go to branch details
 			branchFound = True
 			print('found new branch: ' + lastBranchDeployed)
 		else:
 			print('no new branch...')
-			sleep(10)
+			time.sleep(10)
 		
 	found = False
 	while not found:
