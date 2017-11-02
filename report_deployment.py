@@ -26,9 +26,8 @@ usr2 = 'aureath'
 lastBranchDeployed = "buildResult_OPD-OP11-41"
 
 designatedRoom = room['TEST']
-driver = webdriver.Chrome(driverPaths['Chrome'])
 
-message = 'Deployment has been made'
+message = 'Deployment has been made on: '
 
 def enterMessage(driver, xpath, message):
 		element = driver.find_element_by_xpath(xpath)
@@ -36,7 +35,7 @@ def enterMessage(driver, xpath, message):
 		time.sleep(0.1)
 		element.send_keys(Keys.RETURN)
 
-def reportToHipchat(driver):
+def reportToHipchat(driver, message):
 	
 	driver.get(url)
 	
@@ -72,24 +71,29 @@ def reportToHipchat(driver):
 	
 #Main Operation
 #passwd2 = getpass.getpass('Jira password:')
-f = open('password.txt','r') #read
-passwd2 = f.read()
 passwd = getpass.getpass('Hipchat password:')
 
-branchFound = False
+driver = webdriver.Chrome(driverPaths['Chrome'])
+
 waitForDeployment = True #no way to end for now
 while waitForDeployment:
 	driver.get(url2) #list of branches
-	'''
-	INSERT LOGIN CODE
-	'''
+
 	xpath = '//*[@id="loginForm_os_username"]' #username field
+	element = driver.find_element_by_xpath(xpath)
+	element.send_keys(usr2)
 	
 	xpath = '//*[@id="loginForm_os_password"]' #password field
+	element = driver.find_element_by_xpath(xpath)
+	element.send_keys(passwd)
 	
+	xpath = '//*[@id="loginForm_save"]'
+	driver.find_element_by_xpath(xpath).click()
+	
+	branchFound = False
 	xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]' #first branch in list
-	element = driver.find_element_by_xpath(xpath) #assumes there is at least one branch in list
 	while not branchFound:
+		element = driver.find_element_by_xpath(xpath) #assumes there is at least one branch in list
 		if element.get_attribute('id') != lastBranchDeployed:
 			lastBranchDeployed = element.get_attribute('id')
 			element.click() # go to branch details
@@ -110,4 +114,5 @@ while waitForDeployment:
 		if element.text == 'SUCCESS':
 			found = True
 	#after success found then a message is posted to hipchat
-	reportToHipchat(driver)
+	message = message + lastBranchDeployed
+	reportToHipchat(driver, message)
