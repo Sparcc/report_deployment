@@ -106,7 +106,7 @@ while waitForDeployment:
 		xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]/a'#first branch in list - element containing id
 		element = driver.find_element_by_xpath(xpath) #assumes there is at least one branch in list
 		id = element.get_attribute('id')
-		print('branch at top of list: ' + id)
+		#print('branch at top of list: ' + id)
 		if id != lastBranchDeployed:
 			lastBranchDeployed = id
 			xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]'#element above to be clicked
