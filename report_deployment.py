@@ -23,7 +23,7 @@ url2 = 'https://build.ccamatil.com/browse/OPD-OP11'
 usr = 'thomas.rea@rxpservices.com'
 usr2 = 'aureath'
 
-lastBranchDeployed = "buildResult_OPD-OP11-41"
+lastBranchDeployed = "buildResult_OPD-OP11-42"
 
 designatedRoom = room['TEST']
 
