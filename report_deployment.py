@@ -23,11 +23,11 @@ url2 = 'https://build.ccamatil.com/browse/OPD-OP11'
 usr = 'thomas.rea@rxpservices.com'
 usr2 = 'aureath'
 
-lastBranchDeployed = "buildResult_OPD-OP11-43"
+lastBranchDeployed = "buildResult_OPD-OP11-44"
 
 designatedRoom = room['CCA']
 
-message = 'Deployment has been made: '
+message = 'Deployment has been made and is successful: '
 
 loggedIn = False
 
@@ -119,6 +119,7 @@ while waitForDeployment:
 		
 	found = False
 	while not found:
+		driver.get(driver.current_url)
 		try: #find branch success/not successful tag
 			element = WebDriverWait(driver, 10).until(
 				EC.presence_of_element_located((By.XPATH, '//*[@id="content"]/div[2]/div/section[2]/div/div/div/div[1]/div[2]/div/div[2]/table/tbody/tr/td[2]/span'))
@@ -130,7 +131,6 @@ while waitForDeployment:
 		if element.text == 'SUCCESS':
 			found = True
 		time.sleep(1)
-		driver.get(driver.getCurrentUrl())
 	#after success found then a message is posted to hipchat
 	message = message + lastBranchDeployed
 	reportToHipchat(driver, message)
