@@ -25,7 +25,7 @@ usr2 = 'aureath'
 
 lastBranchDeployed = "buildResult_OPD-OP11-41"
 
-designatedRoom = room['QA']
+designatedRoom = room['TEST']
 
 message = 'JUST A TEST - Deployment has been made on: '
 
@@ -46,8 +46,9 @@ def login (driver):
 def enterMessage(driver, xpath, message):
 	element = driver.find_element_by_xpath(xpath)
 	element.send_keys(message)
-	time.sleep(0.2)
+	time.sleep(1)
 	element.send_keys(Keys.RETURN)
+	time.sleep(1)
 
 def reportToHipchat(driver, message):
 	
