@@ -23,11 +23,11 @@ url2 = 'https://build.ccamatil.com/browse/OPD-OP11'
 usr = 'thomas.rea@rxpservices.com'
 usr2 = 'aureath'
 
-lastBranchDeployed = "buildResult_OPD-OP11-42"
+lastBranchDeployed = "buildResult_OPD-OP11-43"
 
-designatedRoom = room['TEST']
+designatedRoom = room['CCA']
 
-message = 'JUST A TEST - Deployment has been made on: '
+message = 'Deployment has been made: '
 
 loggedIn = False
 
@@ -129,6 +129,8 @@ while waitForDeployment:
 		#see if tag says yes or not
 		if element.text == 'SUCCESS':
 			found = True
+		time.sleep(1)
+		driver.get(driver.getCurrentUrl())
 	#after success found then a message is posted to hipchat
 	message = message + lastBranchDeployed
 	reportToHipchat(driver, message)
