@@ -27,6 +27,9 @@ lastBranchDeployed = "buildResult_OPD-OP11-44"
 
 designatedRoom = room['CCA']
 
+f = open('data.txt','r') #read 
+lastBranchDeployed = f.read()
+
 message = 'Deployment has been made and is successful: '
 
 loggedIn = False
@@ -113,8 +116,11 @@ while waitForDeployment:
 			driver.find_element_by_xpath(xpath).click() # go to branch details
 			branchFound = True
 			print('found new branch: ' + lastBranchDeployed)
+			with open('data.txt', 'w') as f: #write
+				for line in conn.iterdump():
+					f.write('%s\n' % line)	
 		else:
-			print('no new branch...')
+			#print('no new branch...')
 			time.sleep(10)
 		
 	found = False
