@@ -8,6 +8,7 @@ import sys, getopt
 import os
 import time
 import getpass
+import configparser
 
 driverPaths = {'Chrome': 'C:\Selenium\chromedriver.exe',
 		'Edge': 'C:\Selenium\MicrosoftWebDriver.exe',
@@ -25,12 +26,13 @@ usr2 = 'aureath'
 
 lastBranchDeployed = "buildResult_OPD-OP11-44"
 
-designatedRoom = room['CCA']
-
 f = open('data.txt','r') #read 
 lastBranchDeployed = f.read()
 
-message = 'Deployment has been made and is successful: '
+config = configparser.ConfigParser()
+
+designatedRoom = room[config['DEFAULT']['designatedRoom']]
+message = config['DEFAULT']['message']
 
 loggedIn = False
 

@@ -1,0 +1,3 @@
+[DEFAULT]
+designatedRoom = CCA
+message = Deployment has been made and is successful: 
