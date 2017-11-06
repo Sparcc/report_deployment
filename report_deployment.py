@@ -29,9 +29,9 @@ lastBranchDeployed = f.read()
 
 config = configparser.ConfigParser()
 
+url2 = config['DEFAULT']['room']
 designatedRoom = room[config['DEFAULT']['designatedRoom']]
 message = config['DEFAULT']['message']
-url2 = config['DEFAULT']['branch']
 
 loggedIn = False
 
