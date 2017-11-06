@@ -24,12 +24,13 @@ url2 = 'https://build.ccamatil.com/browse/OPD-OP12'
 usr = 'thomas.rea@rxpservices.com'
 usr2 = 'aureath'
 
-f = open('data.txt','r') #read 
+f = open('data','r') #read 
 lastBranchDeployed = f.read()
 
 config = configparser.ConfigParser()
+config.read('config.ini')
 
-url2 = config['DEFAULT']['room']
+url2 = config['DEFAULT']['branch']
 designatedRoom = room[config['DEFAULT']['designatedRoom']]
 message = config['DEFAULT']['message']
 
@@ -117,7 +118,7 @@ while waitForDeployment:
 			driver.find_element_by_xpath(xpath).click() # go to branch details
 			branchFound = True
 			print('found new branch: ' + lastBranchDeployed)
-			with open('data.txt', 'w') as f: #write
+			with open('data', 'w') as f: #write
 				for line in conn.iterdump():
 					f.write('%s\n' % line)	
 		else:
