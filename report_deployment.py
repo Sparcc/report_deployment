@@ -20,11 +20,11 @@ room = {'QA': 'https://rxpservices.hipchat.com/chat/room/4154443',
 	};
 
 url = 'https://www.hipchat.com/sign_in'
-url2 = 'https://build.ccamatil.com/browse/OPD-OP11'
+url2 = 'https://build.ccamatil.com/browse/OPD-OP12'
 usr = 'thomas.rea@rxpservices.com'
 usr2 = 'aureath'
 
-lastBranchDeployed = "buildResult_OPD-OP11-44"
+lastBranchDeployed = config['DEFAULT']['branch']
 
 f = open('data.txt','r') #read 
 lastBranchDeployed = f.read()
@@ -76,7 +76,7 @@ def reportToHipchat(driver, message):
 	driver.find_element_by_xpath(xpath).click()
 	
 	#wait for web app to load
-	driver.implicitly_wait(10)#wait for outlet to load
+	driver.implicitly_wait(10)
 	
 	#select room
 	driver.get(designatedRoom)

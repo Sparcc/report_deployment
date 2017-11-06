@@ -1,3 +1,4 @@
 [DEFAULT]
+branch = https://build.ccamatil.com/browse/OPD-OP12
 designatedRoom = CCA
 message = Deployment has been made and is successful: 
