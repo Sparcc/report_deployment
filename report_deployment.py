@@ -122,6 +122,7 @@ while waitForDeployment:
 			f.write(lastBranchDeployed)	
 		else:
 			#print('no new branch...')
+			driver.get(driver.current_url)
 			time.sleep(10)
 		
 	found = False
@@ -135,6 +136,7 @@ while waitForDeployment:
 			driver.quit()
 		#see if tag says yes or not
 		if element.text == 'SUCCESS':
+			print('success!')
 			found = True
 		time.sleep(1)
 		driver.get(driver.current_url)
