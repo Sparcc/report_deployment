@@ -24,8 +24,6 @@ url2 = 'https://build.ccamatil.com/browse/OPD-OP12'
 usr = 'thomas.rea@rxpservices.com'
 usr2 = 'aureath'
 
-lastBranchDeployed = config['DEFAULT']['branch']
-
 f = open('data.txt','r') #read 
 lastBranchDeployed = f.read()
 
@@ -33,6 +31,7 @@ config = configparser.ConfigParser()
 
 designatedRoom = room[config['DEFAULT']['designatedRoom']]
 message = config['DEFAULT']['message']
+url2 = config['DEFAULT']['branch']
 
 loggedIn = False
 
