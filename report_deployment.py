@@ -33,6 +33,8 @@ config.read('config.ini')
 url2 = config['DEFAULT']['branch']
 designatedRoom = room[config['DEFAULT']['designatedRoom']]
 message = config['DEFAULT']['message']
+login = config['DEFAULT']['login']
+loginArgs = config['DEFAULT']['loginArgs']
 
 loggedIn = False
 
@@ -143,3 +145,6 @@ while waitForDeployment:
 	#after success found then a message is posted to hipchat
 	message = message + lastBranchDeployed
 	reportToHipchat(driver, message)
+	if login:
+		os.chdir('C:\Users\Thomas Rea\Documents\Python\cca_auto_testing')
+		os.system('python CCA_autologin.py ' + loginArgs)
