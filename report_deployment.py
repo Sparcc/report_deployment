@@ -146,5 +146,5 @@ while waitForDeployment:
 	message = message + lastBranchDeployed
 	reportToHipchat(driver, message)
 	if login:
-		os.chdir('C:\Users\Thomas Rea\Documents\Python\cca_auto_testing')
+		os.chdir('C:/Users/Thomas Rea/Documents/Python/cca_auto_testing')
 		os.system('python CCA_autologin.py ' + loginArgs)
