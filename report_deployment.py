@@ -14,7 +14,7 @@ driverPaths = {'Chrome': 'C:\Selenium\chromedriver.exe',
 		'Edge': 'C:\Selenium\MicrosoftWebDriver.exe',
 		'IE': 'C:\Selenium\IEDriverServer.exe'};
 		
-room = {'QA': 'https://rxpservices.hipchat.com/chat/room/4154443',
+room = {'TEST-NOTIF': 'https://rxpservices.hipchat.com/chat/room/4292319',
 	'CCA': 'https://rxpservices.hipchat.com/chat/room/3554226',
 	'TEST': 'https://rxpservices.hipchat.com/chat/room/4216688'
 	};
@@ -31,10 +31,12 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 url2 = config['DEFAULT']['branch']
-designatedRoom = room[config['DEFAULT']['designatedRoom']]
+designatedRooms = room[config['DEFAULT']['designatedRooms']].strip().replace(" ","").split(",")
+					
 message = config['DEFAULT']['message']
 login = config['DEFAULT']['login']
 loginArgs = config['DEFAULT']['loginArgs']
+loginScriptLocation = config['DEFAULT']['loginScriptLocation']
 
 loggedIn = False
 
@@ -81,70 +83,72 @@ def reportToHipchat(driver, message):
 	driver.implicitly_wait(10)
 	
 	#select room
-	driver.get(designatedRoom)
-	
-	#wait for web app to load
-	#driver.implicitly_wait(30)#wait for outlet to load
-	time.sleep(5)
-	
-	#enter message
-	xpath = '//*[@id="hc-message-input"]'
-	enterMessage(driver, xpath, message)
-	
-#Main Operation
-#passwd2 = getpass.getpass('Jira password:')
-passwd = getpass.getpass('Hipchat password:')
-
-driver = webdriver.Chrome(driverPaths['Chrome'])
-
-waitForDeployment = True #no way to end for now
-
-
-while waitForDeployment:
-
-	driver.get(url2) #list of branches
-
-	if not loggedIn:
-		login(driver)
-		loggedIn = True
-	
-	branchFound = False
-	while not branchFound:
-		xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]/a'#first branch in list - element containing id
-		element = driver.find_element_by_xpath(xpath) #assumes there is at least one branch in list
-		id = element.get_attribute('id')
-		#print('branch at top of list: ' + id)
-		if id != lastBranchDeployed:
-			lastBranchDeployed = id
-			xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]'#element above to be clicked
-			driver.find_element_by_xpath(xpath).click() # go to branch details
-			branchFound = True
-			print('found new branch: ' + lastBranchDeployed)
-			f = open('data', 'w') #write
-			f.write(lastBranchDeployed)	
-		else:
-			#print('no new branch...')
-			driver.get(driver.current_url)
-			time.sleep(10)
+	for room in designatedRooms:
+		driver.get(room)
+		#wait for web app to load
+		#driver.implicitly_wait(30)#wait for outlet to load
+		time.sleep(5)
 		
-	found = False
-	while not found:
-		try: #find branch success/not successful tag
-			element = WebDriverWait(driver, 10).until(
-				EC.presence_of_element_located((By.XPATH, '//*[@id="content"]/div[2]/div/section[2]/div/div/div/div[1]/div[2]/div/div[1]/table/tbody/tr/td[2]/span'))
-		)
-		except:
-			print('Cannot find success tag to even determine success or not')
-			driver.quit()
-		#see if tag says yes or not
-		if element.text == 'SUCCESS':
-			print('success!')
-			found = True
-		time.sleep(1)
-		driver.get(driver.current_url)
-	#after success found then a message is posted to hipchat
-	message = message + lastBranchDeployed
-	reportToHipchat(driver, message)
-	if login:
-		os.chdir('C:/Users/Thomas Rea/Documents/Python/cca_auto_testing')
-		os.system('python CCA_autologin.py ' + loginArgs)
+		#enter message
+		xpath = '//*[@id="hc-message-input"]'
+		enterMessage(driver, xpath, message)
+
+def beginMonitoring:
+	passwd = getpass.getpass('Hipchat password:')
+	
+	driver = webdriver.Chrome(driverPaths['Chrome'])
+	
+	waitForDeployment = True #no way to end for now
+	
+	
+	while waitForDeployment:
+	
+		driver.get(url2) #list of branches
+	
+		if not loggedIn:
+			login(driver)
+			loggedIn = True
+		
+		branchFound = False
+		while not branchFound:
+			xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]/a'#first branch in list - element containing id
+			element = driver.find_element_by_xpath(xpath) #assumes there is at least one branch in list
+			id = element.get_attribute('id')
+			if id != lastBranchDeployed:
+				lastBranchDeployed = id
+				xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]'#element above to be clicked
+				driver.find_element_by_xpath(xpath).click() # go to branch details
+				branchFound = True
+				print('found new branch: ' + lastBranchDeployed)
+				f = open('data', 'w') #write
+				f.write(lastBranchDeployed)	
+			else:
+				print('still looking for new branch...')
+				driver.get(driver.current_url)
+				time.sleep(10)
+			
+		found = False
+		while not found:
+			try: #find branch success/not successful tag
+				element = WebDriverWait(driver, 10).until(
+					EC.presence_of_element_located((By.XPATH, '//*[@id="content"]/div[2]/div/section[2]/div/div/div/div[1]/div[2]/div/div[1]/table/tbody/tr/td[2]/span'))
+			)
+			except:
+				print('Cannot find success tag to even determine success or not')
+				driver.quit()
+			#see if tag says yes or not
+			if element.text == 'SUCCESS':
+				print('success!')
+				found = True
+			time.sleep(1)
+			driver.get(driver.current_url)
+		#after success found then a message is posted to hipchat
+		message = message + lastBranchDeployed
+		reportToHipchat(driver, message)
+		if login:
+			os.chdir(loginScriptLocation)
+			os.system('python CCA_autologin.py ' + loginArgs)
+			
+#COOL SHIT GOES HERE
+#Main Operation
+beginMonitoring()
