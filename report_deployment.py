@@ -9,41 +9,72 @@ import os
 import time
 import getpass
 import configparser
+import re
 
-driverPaths = {'Chrome': 'C:\Selenium\chromedriver.exe',
-		'Edge': 'C:\Selenium\MicrosoftWebDriver.exe',
-		'IE': 'C:\Selenium\IEDriverServer.exe'};
+def str2bool(v):
+  return v.lower() in ("yes", "true", "t", "1")
+
+class Environment:
+	driverPaths ={}
+	room = {}
+	url = {}
+	usr = {}
+	lastBranchDeployed = ""
+	config = ""
+	designatedRooms = []
+	mainRoom = ""
+	message = ""
+	login = False
+	loginScriptLocation = ""
+	loginArgs = ""
+	passwd = ""
+	
+	def __init__(self, passwd):
+		self.driverPaths = {'Chrome': 'C:\Selenium\chromedriver.exe',
+				'Edge': 'C:\Selenium\MicrosoftWebDriver.exe',
+				'IE': 'C:\Selenium\IEDriverServer.exe'
+				};
 		
-room = {'TEST-NOTIF': 'https://rxpservices.hipchat.com/chat/room/4292319',
-	'CCA': 'https://rxpservices.hipchat.com/chat/room/3554226',
-	'TEST': 'https://rxpservices.hipchat.com/chat/room/4216688'
-	};
+		self.room = {'TEST-NOTIF': 'https://rxpservices.hipchat.com/chat/room/4292319',
+				'CCA': 'https://rxpservices.hipchat.com/chat/room/3554226',
+				'TEST': 'https://rxpservices.hipchat.com/chat/room/4216688',
+				'DEFAULT': 'https://rxpservices.hipchat.com/chat/room/4216688',
+				'NONE': ''
+				};
+		
+		self.url['hipchat'] = 'https://www.hipchat.com/sign_in'
+		self.url['branch'] = 'https://build.ccamatil.com/browse/OPD-OP12'
+		self.usr['hipchat'] = 'thomas.rea@rxpservices.com'
+		self.usr['jira'] = 'aureath'
+		
+		f = open('data','r') #read 
+		self.lastBranchDeployed = f.read()
+		
+		config = configparser.ConfigParser()
+		config.read('config.ini')
+		
+		self.url['project'] = config['DEFAULT']['project']
+		#parts:
+		#config - string
+		#room - dictionary of room names to url
+		#designatedRooms holds all the urls of rooms
+		roomNames = config['DEFAULT']['designatedRooms'].strip().replace(" ","").split(",")
+		for roomName in roomNames:
+			self.designatedRooms.append(self.room[roomName])
+		mainRoom = self.room[config['DEFAULT']['mainRoom']]
+		self.message = config['DEFAULT']['message']
+		self.login = str2bool(config['LOGIN']['login'])
+		self.loginScriptLocation = config['LOGIN']['loginScriptLocation']
+		self.loginArgs = config['LOGIN']['loginArgs']
+		print('python CCA_autologin.py ' + self.loginArgs)
+		print('can login? ' + str(self.login))
+		
+		self.passwd = passwd
 
-url = 'https://www.hipchat.com/sign_in'
-url2 = 'https://build.ccamatil.com/browse/OPD-OP12'
-usr = 'thomas.rea@rxpservices.com'
-usr2 = 'aureath'
-
-f = open('data','r') #read 
-lastBranchDeployed = f.read()
-
-config = configparser.ConfigParser()
-config.read('config.ini')
-
-url2 = config['DEFAULT']['branch']
-designatedRooms = room[config['DEFAULT']['designatedRooms']].strip().replace(" ","").split(",")
-					
-message = config['DEFAULT']['message']
-login = config['DEFAULT']['login']
-loginArgs = config['DEFAULT']['loginArgs']
-loginScriptLocation = config['DEFAULT']['loginScriptLocation']
-
-loggedIn = False
-
-def login (driver):
+def login (driver, usr, passwd):
 	xpath = '//*[@id="loginForm_os_username"]' #username field
 	element = driver.find_element_by_xpath(xpath)
-	element.send_keys(usr2)
+	element.send_keys(usr)
 	
 	xpath = '//*[@id="loginForm_os_password"]' #password field
 	element = driver.find_element_by_xpath(xpath)
@@ -59,7 +90,7 @@ def enterMessage(driver, xpath, message):
 	element.send_keys(Keys.RETURN)
 	time.sleep(1)
 
-def reportToHipchat(driver, message):
+def reportToHipchat(driver, message, url, usr, passwd, designatedRooms, mainRoom, notificationOnlyMessage):
 	
 	driver.get(url)
 	
@@ -86,27 +117,61 @@ def reportToHipchat(driver, message):
 	for room in designatedRooms:
 		driver.get(room)
 		#wait for web app to load
-		#driver.implicitly_wait(30)#wait for outlet to load
 		time.sleep(5)
 		
 		#enter message
 		xpath = '//*[@id="hc-message-input"]'
-		enterMessage(driver, xpath, message)
+		if room == mainRoom:
+			enterMessage(driver, xpath, notificationOnlyMessage)
+		else:
+			enterMessage(driver, xpath, message)
+		
+		
+def listJiraTickets (driver, url, specificBranch):
+	driver.get(driver.current_url + '/commit')
+	maxHtmlElements = len(driver.find_elements_by_xpath('//*[@id="fullChanges"]/div/ul/li'))
+	print('Number of tickets: ' + str(maxHtmlElements))
+	ticketCount = 1
+	message = ""
+	ticketFound = False
+	while ticketCount <= maxHtmlElements:
+		xpath = '//*[@id="fullChanges"]/div/ul/li['+str(ticketCount)+']/p/a'
+		xpath2 = '//*[@id="fullChanges"]/div/ul/li['+str(ticketCount)+']/p'
+		try:
+			ticket = driver.find_element_by_xpath(xpath)
+			ticketFound = True
+		except:
+			ticketFound = False
+		if ticketFound:
+			descriptionElement = driver.find_element_by_xpath(xpath2)
+			descriptionMatch = re.search('\](.*)', descriptionElement.text)
+			description = descriptionMatch.group()
+			description = description[2:]
+			message += (ticket.get_attribute('data-issue-key') + '\n' +
+						' Link - ' + ticket.get_attribute('href') + '\n' +
+						'Description - ' + description + '\n' +
+						'-------------------------------------------------'
+						)
+		ticketCount += 1
+	return message
+	#'//*[@id="fullChanges"]/div/ul/li[1]/p/text()[4]'
+	#'//*[@id="fullChanges"]/div/ul/li[1]/p/text()[4]'
+	#//*[@id="fullChanges"]/div/ul/li[1]/p/text()[1]
 
-def beginMonitoring:
-	passwd = getpass.getpass('Hipchat password:')
+def beginMonitoring (env):
 	
-	driver = webdriver.Chrome(driverPaths['Chrome'])
+	driver = webdriver.Chrome(env.driverPaths['Chrome'])
 	
 	waitForDeployment = True #no way to end for now
 	
+	loggedIn = False
 	
 	while waitForDeployment:
 	
-		driver.get(url2) #list of branches
+		driver.get(env.url['branch']) #list of branches
 	
 		if not loggedIn:
-			login(driver)
+			login(driver,env.usr['jira'],env.passwd)
 			loggedIn = True
 		
 		branchFound = False
@@ -114,14 +179,14 @@ def beginMonitoring:
 			xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]/a'#first branch in list - element containing id
 			element = driver.find_element_by_xpath(xpath) #assumes there is at least one branch in list
 			id = element.get_attribute('id')
-			if id != lastBranchDeployed:
-				lastBranchDeployed = id
+			if id != env.lastBranchDeployed:
+				env.lastBranchDeployed = id
 				xpath='//*[@id="buildResultsTable"]/tbody/tr[1]/td[1]'#element above to be clicked
 				driver.find_element_by_xpath(xpath).click() # go to branch details
 				branchFound = True
-				print('found new branch: ' + lastBranchDeployed)
+				print('found new branch: ' + env.lastBranchDeployed)
 				f = open('data', 'w') #write
-				f.write(lastBranchDeployed)	
+				f.write(env.lastBranchDeployed)	
 			else:
 				print('still looking for new branch...')
 				driver.get(driver.current_url)
@@ -142,13 +207,14 @@ def beginMonitoring:
 				found = True
 			time.sleep(1)
 			driver.get(driver.current_url)
-		#after success found then a message is posted to hipchat
-		message = message + lastBranchDeployed
-		reportToHipchat(driver, message)
-		if login:
-			os.chdir(loginScriptLocation)
-			os.system('python CCA_autologin.py ' + loginArgs)
-			
-#COOL SHIT GOES HERE
-#Main Operation
-beginMonitoring()
+		#after success found then a message is posted to hipchat6
+		specificBranch = env.lastBranchDeployed.lstrip('buildResult_')
+		notificationOnlyMessage = (env.message + ' ' + specificBranch + '\n' + 
+								'-------------------------------------------------')
+		env.message += (' ' + specificBranch + '\n' + 
+								'-------------------------------------------------')
+		env.message += listJiraTickets(driver, env.url, specificBranch)
+		reportToHipchat(driver, env.message, env.url['hipchat'], env.usr['hipchat'], env.passwd, env.designatedRooms, env.mainRoom, notificationOnlyMessage)
+		if env.login:
+			os.chdir(env.loginScriptLocation)
+			os.system('python CCA_autologin.py ' + env.loginArgs)
