@@ -210,9 +210,9 @@ def beginMonitoring (env):
 		#after success found then a message is posted to hipchat6
 		specificBranch = env.lastBranchDeployed.lstrip('buildResult_')
 		notificationOnlyMessage = (env.message + ' ' + specificBranch + '\n' + 
-								'-------------------------------------------------')
+								'-------------------------------------------------\n')
 		env.message += (' ' + specificBranch + '\n' + 
-								'-------------------------------------------------')
+								'-------------------------------------------------\n')
 		env.message += listJiraTickets(driver, env.url, specificBranch)
 		reportToHipchat(driver, env.message, env.url['hipchat'], env.usr['hipchat'], env.passwd, env.designatedRooms, env.mainRoom, notificationOnlyMessage)
 		if env.login:
